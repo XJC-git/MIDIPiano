@@ -1,3 +1,4 @@
+clear all;close all;clc; 
 h = figure();
 pos = get(h, 'Position');
 pos(1) = pos(1)+pos(3)/2-1080/2;
@@ -7,6 +8,23 @@ set(h, 'Position', pos);
 set(h, 'MenuBar', 'none');
 set(h, 'Name', 'Piano');
 
+cfg = [];
+for i=1:11
+  % see http://en.wikipedia.org/wiki/Scientific_pitch_notation
+  cfg.mapping((i-1)*12+1,  :) = {sprintf('%d_C' , i-1), 0, i*12+0};
+  cfg.mapping((i-1)*12+2,  :) = {sprintf('%d_Db', i-1), 0, i*12+1};
+  cfg.mapping((i-1)*12+3,  :) = {sprintf('%d_D' , i-1), 0, i*12+2};
+  cfg.mapping((i-1)*12+4,  :) = {sprintf('%d_Eb', i-1), 0, i*12+3};
+  cfg.mapping((i-1)*12+5,  :) = {sprintf('%d_E' , i-1), 0, i*12+4};
+  cfg.mapping((i-1)*12+6,  :) = {sprintf('%d_F' , i-1), 0, i*12+5};
+  cfg.mapping((i-1)*12+7,  :) = {sprintf('%d_Gb', i-1), 0, i*12+6};
+  cfg.mapping((i-1)*12+8,  :) = {sprintf('%d_G' , i-1), 0, i*12+7};
+  cfg.mapping((i-1)*12+9,  :) = {sprintf('%d_Ab', i-1), 0, i*12+8};
+  cfg.mapping((i-1)*12+10, :) = {sprintf('%d_A' , i-1), 0, i*12+9};
+  cfg.mapping((i-1)*12+11, :) = {sprintf('%d_Bb', i-1), 0, i*12+10};
+  cfg.mapping((i-1)*12+12, :) = {sprintf('%d_B' , i-1), 0, i*12+11};
+end
+guidata(h,cfg);
 
 uicontrol('tag','select_file','style','togglebutton','string','Select MIDI File');
 uicontrol('tag','stop_play','style','togglebutton','string','Stop');
@@ -196,13 +214,59 @@ else
    disp(['User selected ', fullfile(path,file)]);
    midi = readmidi(fullfile(path,file));
    Notes = midiInfo(midi,0);
-   dispNotes(1:5,:);
+   disp(Notes(1:5,:));
+   start_queue = sortrows(Notes,5);
+   end_queue = sortrows(Notes,6);
+   tic;
    [y,Fs] = midi2audio(midi);  
    y = midi2audio(midi, Fs, 'sine');
    soundsc(y,Fs);
-end
-end
+   start_count=1;
+   end_count=1;
+   cfg = guidata(h);
+   tag     = cfg.mapping(:,1);
+   channel = cell2mat(cfg.mapping(:,2));
+   note    = cell2mat(cfg.mapping(:,3));
+   while start_count<length(Notes)
+       time = toc;
+       disp(num2str(time)+":"+num2str(start_count)+"\n");
+       if time>start_queue(start_count,5)
+           sel = (note==start_queue(start_count,3));
+           if sum(sel)==1
+                u = findobj(h.Parent, 'tag', tag{sel});
+                if numel(u)==1
+                    switch lower(get(u, 'style'))
+                        case 'pushbutton'
+                            % pushed down
+                                set(u, 'backgroundcolor', [1 0 0]);
+                            start_count=start_count+1;
+                    end
+                end
+            end
+       end
+       if time>end_queue(end_count,6)
+           sel = (note==end_queue(end_count,3));
+           if sum(sel)==1
+                u = findobj(h.Parent, 'tag', tag{sel});
+                if numel(u)==1
+                    switch lower(get(u, 'style'))
+                        case 'pushbutton'
+                            % released, switch back to white or black
+                            tmp = get(u, 'tag');
+                            if tmp(end)=='b'
+                                    %set(u, 'backgroundcolor', [0 0 0]);
+                            else
+                                    %set(u, 'backgroundcolor', [1 1 1]);
 
+                            end
+                            end_count=end_count+1;
+                    end
+                end
+            end
+       end
+   end
+end
+end
 function stop_play(h,varargin)
 clear sound;
 end

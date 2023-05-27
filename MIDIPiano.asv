@@ -196,7 +196,7 @@ else
    disp(['User selected ', fullfile(path,file)]);
    midi = readmidi(fullfile(path,file));
    Notes = midiInfo(midi,0);
-   disp(Notes(1:5,:));
+   dispNotes(1:5,:);
    [y,Fs] = midi2audio(midi);  
    y = midi2audio(midi, Fs, 'sine');
    soundsc(y,Fs);

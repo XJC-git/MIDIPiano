@@ -217,17 +217,17 @@ else
    disp(Notes(1:5,:));
    start_queue = sortrows(Notes,5);
    end_queue = sortrows(Notes,6);
-   tic;
    [y,Fs] = midi2audio(midi);  
    y = midi2audio(midi, Fs, 'sine');
    soundsc(y,Fs);
+   tic;
    start_count=1;
    end_count=1;
    cfg = guidata(h);
    tag     = cfg.mapping(:,1);
    channel = cell2mat(cfg.mapping(:,2));
    note    = cell2mat(cfg.mapping(:,3));
-   while start_count<length(Notes)
+   while start_count<length(Notes) && inde
        time = toc;
        disp(num2str(time)+":"+num2str(start_count)+"\n");
        if time>start_queue(start_count,5)
@@ -254,9 +254,9 @@ else
                             % released, switch back to white or black
                             tmp = get(u, 'tag');
                             if tmp(end)=='b'
-                                    %set(u, 'backgroundcolor', [0 0 0]);
+                                    set(u, 'backgroundcolor', [0 0 0]);
                             else
-                                    %set(u, 'backgroundcolor', [1 1 1]);
+                                    set(u, 'backgroundcolor', [1 1 1]);
 
                             end
                             end_count=end_count+1;
@@ -264,6 +264,7 @@ else
                 end
             end
        end
+       pause(0.001)
    end
 end
 end

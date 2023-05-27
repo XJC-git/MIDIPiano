@@ -7,6 +7,7 @@ pos(4) = 180;
 set(h, 'Position', pos);
 set(h, 'MenuBar', 'none');
 set(h, 'Name', 'Piano');
+global index;
 
 cfg = [];
 for i=1:11

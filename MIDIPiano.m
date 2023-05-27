@@ -7,7 +7,9 @@ pos(4) = 180;
 set(h, 'Position', pos);
 set(h, 'MenuBar', 'none');
 set(h, 'Name', 'Piano');
+
 global index;
+index = 0;
 
 cfg = [];
 for i=1:11
@@ -132,7 +134,7 @@ uicontrol('tag', '8_C',  'style', 'pushbutton', 'string', '');
 ft_uilayout(h, 'tag', '^.*$', 'callback', @cb_interface);
 ft_uilayout(h, 'tag', 'select_file', 'callback', @open_midi);
 ft_uilayout(h, 'tag', 'stop_play', 'callback', @stop_play);
-
+mytemps(h);
 
 ft_uilayout(h, 'tag', 'select_file','position', [20 150 100 25]);
 ft_uilayout(h, 'tag', 'stop_play','position', [200 150 100 25]);
@@ -168,6 +170,7 @@ ft_uilayout(h, 'tag', '^5', 'hshift', 40+4*140);
 ft_uilayout(h, 'tag', '^6', 'hshift', 40+5*140);
 ft_uilayout(h, 'tag', '^7', 'hshift', 40+6*140);
 ft_uilayout(h, 'tag', '^8', 'hshift', 40+7*140);
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
@@ -208,6 +211,8 @@ end
 end
 
 function open_midi(h, varargin)
+global index;
+index=1;
 [file,path] = uigetfile('*.mid');
 if isequal(file,0)
    disp('User selected Cancel');
@@ -228,7 +233,7 @@ else
    tag     = cfg.mapping(:,1);
    channel = cell2mat(cfg.mapping(:,2));
    note    = cell2mat(cfg.mapping(:,3));
-   while start_count<length(Notes)
+   while start_count<length(Notes) && index==1
        time = toc;
        disp(num2str(time)+":"+num2str(start_count)+"\n");
        if time>start_queue(start_count,5)
@@ -258,7 +263,6 @@ else
                                     set(u, 'backgroundcolor', [0 0 0]);
                             else
                                     set(u, 'backgroundcolor', [1 1 1]);
-
                             end
                             end_count=end_count+1;
                     end
@@ -268,8 +272,38 @@ else
        pause(0.001)
    end
 end
+    for i=1:88;
+        u = findobj(h.Parent, 'tag', tag{i});
+        if numel(u)==1
+            tmp = get(u, 'tag');
+            if tmp(end)=='b'
+                set(u, 'backgroundcolor', [0 0 0]);
+            else
+                set(u, 'backgroundcolor', [1 1 1]);
+            end
+        end
+    end
 end
+
+
 function stop_play(h,varargin)
 clear sound;
+global index;
+index=0;
+end
+
+function mytemps(h)
+c = uicontrol(h,'Style','popupmenu');
+c.Position = [400 150 100 25];
+c.String = {'1.0','1.25','1.5','1.75','2.0'};
+c.Callback = @selection;
+
+    function selection(src,event)
+        val = c.Value;
+        str = c.String;
+        str{val};
+        disp(['Selection: ' str{val}]);
+    end
+
 end
 

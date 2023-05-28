@@ -185,6 +185,7 @@ octave = str2double(tag(1));
 note   = tag(3:end);
 
 if 1==1% strcmp(cfg.playsound, 'yes')
+    global rate;
   % the first column is octave 0 according to http://en.wikipedia.org/wiki/Scientific_pitch_notation
   frequency.C  = [16.352 32.703 65.406 130.81 261.63 523.25 1046.5 2093.0 4186.0  8372.0 16744.0];
   frequency.Db = [17.324 34.648 69.296 138.59 277.18 554.37 1108.7 2217.5 4434.9  8869.8 17739.7];
@@ -211,7 +212,7 @@ end
 end
 
 function open_midi(h, varargin)
-global index;
+global index rate;
 index=1;
 [file,path] = uigetfile('*.mid');
 if isequal(file,0)
@@ -221,11 +222,11 @@ else
    midi = readmidi(fullfile(path,file));
    Notes = midiInfo(midi,0);
    disp(Notes(1:5,:));
-   start_queue = sortrows(Notes,5);
+   start_queue1 = sortrows(Notes,5);
    end_queue = sortrows(Notes,6);
    [y,Fs] = midi2audio(midi);  
    y = midi2audio(midi, Fs, 'sine');
-   soundsc(y,Fs);
+   soundsc(y,Fs*rate);
    tic;
    start_count=1;
    end_count=1;
@@ -234,7 +235,9 @@ else
    channel = cell2mat(cfg.mapping(:,2));
    note    = cell2mat(cfg.mapping(:,3));
    while start_count<length(Notes) && index==1
-       time = toc;
+       time1 = toc;
+       time=time1*rate;
+       start_queue=start_queue1;
        disp(num2str(time)+":"+num2str(start_count)+"\n");
        if time>start_queue(start_count,5)
            sel = (note==start_queue(start_count,3));
@@ -293,16 +296,19 @@ index=0;
 end
 
 function mytemps(h)
+global rate;
+rate=1;
 c = uicontrol(h,'Style','popupmenu');
 c.Position = [400 150 100 25];
-c.String = {'1.0','1.25','1.5','1.75','2.0'};
+c.String = {'0.5','0.75','1.0','1.25','1.5','1.75','2.0'};
+c.Value=3;
 c.Callback = @selection;
-
     function selection(src,event)
         val = c.Value;
         str = c.String;
-        str{val};
+        str{val}
         disp(['Selection: ' str{val}]);
+        rate=str2num(str{val})
     end
 
 end
